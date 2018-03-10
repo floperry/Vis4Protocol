@@ -8,12 +8,15 @@ import pythoncom
 from gensim.models import Word2Vec
 from pprint import pprint
 import re, collections
+import string
+import os
 import matplotlib.pyplot as plt
 
 protocol = '38101-1'
+tmpfile = 'tmp.txt'
 txtfile = protocol + '.txt'
 docfile = protocol + '.doc'
-path = 'D:/Github/5G/word/protocol/'
+path = 'D:/Github/Vis4Protocol/procotol/'
 
 class MSOffice2txt():
     def __init__(self, fileType=['doc']):
@@ -54,6 +57,14 @@ class MSOffice2txt():
         else:
             return False
 
+    def punctuationDelete(self, txtFilename1, txtFilename2):
+    	with open(txtFilename1, 'r') as f:
+    		with open(txtFilename2, 'a') as t:
+    			for line in f:
+    				t.write(re.sub('[%s]' % re.escape(string.punctuation), '', line) + '\n')
+    	os.remove(txtFilename1)
+
+
 class MyCorpus(object):
 	def __init__(self, fname):
 		self.fname = fname
@@ -65,18 +76,19 @@ class MyCorpus(object):
 
 if __name__ == '__main__':
 	msoffice = MSOffice2txt()
-	if msoffice.translate(path + docfile, path + txtfile):
+	if msoffice.translate(path + docfile, path + tmpfile):
 	    print('Successed!')
 	else:
 	    print('Failed!')
+	msoffice.punctuationDelete(path + tmpfile, path + txtfile)
 	msoffice.close()
 
-	with open(txtfile, 'r') as f:
+	with open(path + txtfile, 'r') as f:
 		file = f.read()
 		words = [word for word in file.split() if re.findall(r'\w', word)]
 	print(len(words))
 
-	sentences = MyCorpus(txtfile)
+	sentences = MyCorpus(path + txtfile)
 	model = Word2Vec(sentences, size=2, min_count=1)
 
 	x, y = 0, 0
@@ -91,11 +103,11 @@ if __name__ == '__main__':
 	with open('data.txt', 'a') as f:
 		f.write(protocol + ' ' + str(x) + ' ' + str(y) + ' ' + str(len(words)) + '\n')
 
-
-	'''
+	'''	
 	plt.figure()
 	plt.scatter(x, y, s=len(words), facecolors='none', edgecolors='r')
 	plt.scatter(x, y, s=10, color='r')
 	plt.text(x, y, '38211-002')
 	plt.show()
+	
 	'''
